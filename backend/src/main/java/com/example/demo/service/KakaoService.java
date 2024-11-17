@@ -104,25 +104,32 @@ public class KakaoService {
         String profileImage = responseBody.path("kakao_account").path("profile").path("profile_image_url").asText();
 
         // 사용자 정보 저장 또는 업데이트
-        Member member = memberRepository.findByEmail(email)
+        Member member = memberRepository.findById(email)
                 .map(existingMember -> {
-                    existingMember.setAccessToken(accessToken);
+                    // 사용자 정보 업데이트
                     existingMember.setNickname(nickname);
+                    existingMember.setKakaoId(kakaoId);
                     existingMember.setProfileImage(profileImage);
+                    existingMember.setAccessToken(accessToken);
+                    existingMember.setUpdatedAt(OffsetDateTime.now());
                     return existingMember;
                 })
-                .orElseGet(() -> Member.builder()
-                        .kakaoId(kakaoId)
+                .orElse(Member.builder()
+                        // 새로운 사용자 생성
                         .email(email)
                         .nickname(nickname)
+                        .kakaoId(kakaoId)
                         .profileImage(profileImage)
                         .accessToken(accessToken)
+                        .createdAt(OffsetDateTime.now())
+                        .updatedAt(OffsetDateTime.now())
                         .build());
 
+        // Redis에 저장 (새로 생성된 사용자 또는 업데이트된 사용자)
         memberRepository.save(member);
 
         // JWT 발급
-        String jwtToken = jwtService.createJWT(member.getId());
+        String jwtToken = jwtService.createJWT(email);
 
         return KakaoMemberResponse.builder()
                 .email(email)

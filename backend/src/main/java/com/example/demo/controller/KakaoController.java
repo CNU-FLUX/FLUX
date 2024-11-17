@@ -34,7 +34,7 @@ public class KakaoController {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body(null); // 에러 발생 시 500 반환
+            return ResponseEntity.status(500).body("Login failed");
         }
     }
 
@@ -47,8 +47,8 @@ public class KakaoController {
             jwtService.validateJWT(token);
 
             // 토큰에서 사용자 ID 추출
-            String memberId = jwtService.getMemberId();
-            return ResponseEntity.ok("Authenticated user ID: " + memberId);
+            String email = jwtService.getEmailFromJWT(token);
+            return ResponseEntity.ok("Authenticated user email: " + email);
 
         } catch (Exception e) {
             return ResponseEntity.status(401).body("Invalid or expired token: " + e.getMessage());

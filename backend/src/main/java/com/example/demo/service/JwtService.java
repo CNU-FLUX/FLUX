@@ -17,46 +17,23 @@ public class JwtService {
     public JwtService() {
     }
 
-    public String createJWT(Long id) {
+    public String createJWT(String email) {
         return Jwts.builder()
-                .claim("id", String.valueOf(id))
+                .claim("email", email) // 사용자 식별자로 email 사용
                 .signWith(key)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 60 * 60 * 10000))
+                .setExpiration(new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000)) // 1일 유효
                 .compact();
     }
 
-    public String getJWT() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
-                .getRequest();
-        String token = request.getHeader("Authorization");
+    // JWT에서 email 추출
+    public String getEmailFromJWT(String token) {
+        Jws<Claims> claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token);
 
-        if (token == null) {
-            throw new JwtException("토큰이 유효하지 않습니다.");
-        }
-
-        return token.replace("Bearer ", "");
-    }
-
-    public String getMemberId() {
-        String accessToken = getJWT();
-
-        if (accessToken.isEmpty()) {
-            throw new JwtException("토큰이 유효하지 않습니다.");
-        }
-        Jws<Claims> jws;
-
-        try {
-            jws = Jwts.parserBuilder() // parser() 대신 parserBuilder() 사용
-                    .setSigningKey(key) // verifyWith 대신 setSigningKey 사용
-                    .build() // 빌더 완료
-                    .parseClaimsJws(accessToken); // parseSignedClaims 대신 parseClaimsJws 사용
-        } catch (JwtException e) {
-            throw new JwtException("토큰이 유효하지 않습니다.");
-        }
-
-        return jws.getBody() // getPayload() 대신 getBody() 사용
-                .get("id", String.class);
+        return claims.getBody().get("email", String.class); // email 필드 추출
     }
 
     public void validateJWT(String token) {

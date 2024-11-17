@@ -1,7 +1,7 @@
 package com.example.demo.repository;
 
 import com.example.demo.entity.Member;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -15,9 +15,7 @@ import java.util.Optional;
 //delete(): 엔티티 삭제
 
 @Repository
-public interface MemberRepository extends JpaRepository<Member, Long> {
+public interface MemberRepository extends CrudRepository<Member, String> {
     Optional<Member> findByEmail(String email);
-
-    Optional<Member> findByKakaoId(Long kakaoId);
 
 }
