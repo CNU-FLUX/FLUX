@@ -28,4 +28,11 @@ public class Member {
     private OffsetDateTime createdAt; // 생성 시간
 
     private OffsetDateTime updatedAt; // 업데이트 시간
+
+
+    public Member(String email, String nickname) {
+        this.email = email;
+        this.nickname = nickname;
+    }
+
 }

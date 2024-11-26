@@ -1,9 +1,8 @@
 package com.example.demo.service;
 
-import com.example.demo.entity.KakaoMemberResponse;
+import com.example.demo.dto.KakaoMemberResponse;
 import com.example.demo.entity.Member;
 import com.example.demo.repository.MemberRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
@@ -12,16 +11,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import org.springframework.util.*;
 import org.springframework.http.*;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.URI;
 import java.time.OffsetDateTime;
-import java.util.Optional;
 
 @Getter
 @Service
@@ -40,6 +35,8 @@ public class KakaoService {
     @Autowired
     private JwtService jwtService;
 
+    @Autowired
+    private GeoService geoService;
 
     // 카카오 로그인 URL 생성
     public String getKakaoLoginUrl() {
@@ -48,12 +45,12 @@ public class KakaoService {
     }
 
     // 카카오 로그인 처리
-    public KakaoMemberResponse handleKakaoLogin(String code) throws Exception {
+    public KakaoMemberResponse handleKakaoLogin(String code, Double latitude, Double longitude) throws Exception {
         // Access Token 발급
         String accessToken = getAccessToken(code);
 
         // 사용자 정보 가져오기 및 저장
-        return getUserInfo(accessToken);
+        return getUserInfo(accessToken, latitude, longitude);
     }
 
     //인가 코드를 받아서 accessToken을 반환
@@ -85,7 +82,7 @@ public class KakaoService {
 
     // 액세스 토큰을 사용해 프로필 정보를 가져오고 User 엔티티에 저장
     // 사용자 정보 조회 및 JWT 생성
-    public KakaoMemberResponse getUserInfo(String accessToken) throws Exception {
+    public KakaoMemberResponse getUserInfo(String accessToken, Double latitude, Double longitude) throws Exception {
         RestTemplate restTemplate = new RestTemplate();
         String reqUrl = "https://kapi.kakao.com/v2/user/me";
 
@@ -128,6 +125,14 @@ public class KakaoService {
         // Redis에 저장 (새로 생성된 사용자 또는 업데이트된 사용자)
         memberRepository.save(member);
 
+        // Redis에 사용자 위치 정보 저장
+        if (latitude != null && longitude != null) {
+            geoService.saveUserLocation(email, longitude, latitude);
+        } else {
+            // 기본 위치 저장 (임의로 설정, 예: 대전 충남대학교)
+            geoService.saveUserLocation(member.getEmail(), 127.3445, 36.3659);
+        }
+
         // JWT 발급
         String jwtToken = jwtService.createJWT(email);
 
@@ -141,15 +146,14 @@ public class KakaoService {
 
 
     //accessToken을 받아서 로그아웃 시키는 메서드
-    public void kakaoLogout(String accessToken) {
-
+    public boolean kakaoLogout(String accessToken) {
+        // JWT 토큰 검증 및 이메일 추출
         RestTemplate restTemplate = new RestTemplate();
         String reqUrl = "https://kapi.kakao.com/v1/user/logout";
 
-        // HttpHeader 오브젝트
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + accessToken);
-        headers.add("Content-Type", "application/x-www-form-urlencoded");
+        headers.add("Authorization", "Bearer " + accessToken); // 액세스 토큰 추가
+        headers.add("Content-Type", "application/x-www-form-urlencoded;charset=utf-8"); // Content-Type 추가
 
         // HttpEntity 생성 (headers만 포함)
         HttpEntity<Void> kakaoLogoutRequest = new HttpEntity<>(headers);
@@ -158,21 +162,23 @@ public class KakaoService {
             // POST 방식으로 요청
             ResponseEntity<String> response = restTemplate.exchange(reqUrl, HttpMethod.POST, kakaoLogoutRequest, String.class);
 
-            // 응답 코드 출력
-            int responseCode = response.getStatusCodeValue();
-            System.out.println("[KakaoApi.kakaoLogout] responseCode : " + responseCode);
-
-            // 응답 본문 출력
-            String result = response.getBody();
-            System.out.println("kakao logout - responseBody = " + result);
+            // 응답 상태 코드 확인 (200 OK)
+            if (response.getStatusCode() == HttpStatus.OK) {
+                System.out.println("Logout success: " + response.getBody());
+                return true; // 로그아웃 성공
+            } else {
+                System.out.println("Logout failed: " + response.getBody());
+                return false; // 로그아웃 실패
+            }
 
         } catch (HttpClientErrorException e) {
             System.out.println("Error during logout: " + e.getStatusCode());
             System.out.println("Response Body: " + e.getResponseBodyAsString());
+            return false; // 예외 처리 중 실패 반환
         } catch (Exception e) {
             e.printStackTrace();
+            return false; // 예외 처리 중 실패 반환
         }
-
 
     }
 }

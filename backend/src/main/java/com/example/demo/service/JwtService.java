@@ -26,14 +26,29 @@ public class JwtService {
                 .compact();
     }
 
+    // Authorization 헤더에서 JWT 추출
+    public String extractTokenFromRequest(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new JwtException("Authorization 헤더가 없거나 잘못되었습니다.");
+        }
+        return authHeader.substring(7); // "Bearer " 이후의 토큰 반환
+    }
+
     // JWT에서 email 추출
     public String getEmailFromJWT(String token) {
-        Jws<Claims> claims = Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token);
+        try {
+            Jws<Claims> claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token);
 
-        return claims.getBody().get("email", String.class); // email 필드 추출
+            return claims.getBody().get("email", String.class); // email 필드 추출
+        } catch (ExpiredJwtException e) {
+            throw new JwtException("토큰이 만료되었습니다.", e);
+        } catch (Exception e) {
+            throw new JwtException("JWT 형식이 잘못되었습니다.", e);
+        }
     }
 
     public void validateJWT(String token) {

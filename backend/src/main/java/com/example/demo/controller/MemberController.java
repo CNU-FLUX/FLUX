@@ -1,0 +1,84 @@
+package com.example.demo.controller;
+
+import com.example.demo.dto.MemberRequest;
+import com.example.demo.entity.Member;
+import com.example.demo.service.JwtService;
+import com.example.demo.service.MemberService;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/member")
+public class MemberController {
+
+    private final MemberService memberService;
+    private final JwtService jwtService;
+
+    /**
+     * 회원가입
+     */
+    @PostMapping("/signup")
+    public ResponseEntity<?> signup(@RequestBody MemberRequest memberRequest) {
+        try {
+            Member newMember = memberService.signupMember(memberRequest);
+            return ResponseEntity.ok(newMember);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("이미 존재하는 이메일입니다.");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("서버 내부 오류가 발생했습니다.");
+        }
+    }
+
+    /**
+     * 로그인
+     */
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody MemberRequest memberRequest) {
+        try {
+            String jwtToken = memberService.loginMember(memberRequest);
+            return ResponseEntity.ok().header("Authorization", "Bearer " + jwtToken).body("로그인 성공");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(401).body("Invalid email or password");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Login failed");
+        }
+    }
+
+    /**
+     * 사용자 정보 조회
+     */
+    @GetMapping("/my")
+    public ResponseEntity<Member> getMemberInfo(HttpServletRequest request) {
+        try {
+            String token = jwtService.extractTokenFromRequest(request);
+            String email = jwtService.getEmailFromJWT(token);
+
+            Member member = memberService.findMemberByEmail(email);
+
+            return ResponseEntity.ok(member);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(null);
+        }
+    }
+
+    /**
+     * JWT 검증 및 사용자 ID 추출
+     */
+    @GetMapping("/validate-token")
+    public ResponseEntity<String> validateToken(HttpServletRequest request) {
+        try {
+            // JWT에서 사용자 ID 추출
+            String token = jwtService.extractTokenFromRequest(request);
+            token = token.replace("Bearer ", "");
+            jwtService.validateJWT(token);
+
+            String email = jwtService.getEmailFromJWT(token);
+            return ResponseEntity.ok("Authenticated user email: " + email);
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body("Invalid or expired token: " + e.getMessage());
+        }
+    }
+}
