@@ -2,11 +2,13 @@ package com.example.demo.service;
 
 import com.example.demo.entity.Member;
 import com.example.demo.repository.MemberRepository;
-import com.example.demo.service.JwtService;
 import com.example.demo.dto.MemberRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -76,4 +78,27 @@ public class MemberService {
         return memberRepository.findById(email)
                 .orElseThrow(() -> new RuntimeException("Member not found with email: " + email));
     }
+
+    public void updatePushNotificationSetting(String email, boolean pushEnabled) {
+        Member member = memberRepository.findById(email)
+                .orElseThrow(() -> new RuntimeException("Member not found with email: " + email));
+
+        member.setPushEnabled(pushEnabled);
+        memberRepository.save(member);
+    }
+
+    // Push 알림 활성화된 사용자 필터링
+    public List<String> filterPushEnabledUsers(List<String> userEmails) {
+        return userEmails.stream()
+                .filter(email -> {
+                    // 멤버 정보를 Redis에서 조회
+                    Member member = memberRepository.findById(email)
+                            .orElse(null);
+
+                    // pushEnabled 값이 true인 경우만 포함
+                    return member != null && member.isPushEnabled();
+                })
+                .collect(Collectors.toList());
+    }
+
 }

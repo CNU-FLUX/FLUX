@@ -6,6 +6,7 @@ import com.example.demo.service.JwtService;
 import com.example.demo.service.MemberService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -79,6 +80,26 @@ public class MemberController {
             return ResponseEntity.ok("Authenticated user email: " + email);
         } catch (Exception e) {
             return ResponseEntity.status(401).body("Invalid or expired token: " + e.getMessage());
+        }
+    }
+
+    // Push 알림 설정 업데이트
+    @PostMapping("/settings/push-notification")
+    public ResponseEntity<?> updatePushNotificationSetting(HttpServletRequest request,
+                                                           @RequestParam boolean pushEnabled) {
+        try {
+            // JWT 토큰에서 이메일 추출
+            String jwtToken = jwtService.extractTokenFromRequest(request);
+            String email = jwtService.getEmailFromJWT(jwtToken);
+
+            // Push 알림 설정 업데이트
+            memberService.updatePushNotificationSetting(email, pushEnabled);
+
+            return ResponseEntity.ok("Push notification setting updated successfully");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to update push notification setting: " + e.getMessage());
         }
     }
 }

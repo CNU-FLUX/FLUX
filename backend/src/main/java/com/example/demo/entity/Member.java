@@ -29,6 +29,10 @@ public class Member {
 
     private OffsetDateTime updatedAt; // 업데이트 시간
 
+    private String accountId; // 블록체인 연동 Id
+
+    private boolean pushEnabled; // Push 알림 허용 여부
+
 
     public Member(String email, String nickname) {
         this.email = email;
