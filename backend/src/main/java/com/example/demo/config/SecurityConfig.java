@@ -21,9 +21,8 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable()) // CSRF 비활성화
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/member/signup", "/member/login").permitAll() // 회원가입, 로그인 허용
+                        .requestMatchers("/kakao/login-url", "/kakao/callback").permitAll() // 회원가입, 로그인 허용
                         .requestMatchers("/ws/**").permitAll() // WebSocket 엔드포인트 허용
-                        .requestMatchers("/member/my").authenticated() // '/users/my'는 인증 필요
                         .anyRequest().authenticated() // 나머지 요청도 인증 필요
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // JWT 필터 추가
