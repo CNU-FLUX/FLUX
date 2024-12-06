@@ -120,6 +120,7 @@ public class KakaoService {
                         .accessToken(accessToken)
                         .createdAt(OffsetDateTime.now())
                         .updatedAt(OffsetDateTime.now())
+                        .pushEnabled(true) // 기본값 설정
                         .build());
 
         // Redis에 저장 (새로 생성된 사용자 또는 업데이트된 사용자)

@@ -24,6 +24,7 @@ public class MemberController {
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody MemberRequest memberRequest) {
         try {
+            System.out.println("회원가입 요청 데이터: "+memberRequest);
             Member newMember = memberService.signupMember(memberRequest);
             return ResponseEntity.ok(newMember);
         } catch (IllegalArgumentException e) {

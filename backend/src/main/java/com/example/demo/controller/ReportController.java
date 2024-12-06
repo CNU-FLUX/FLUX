@@ -1,7 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.ReportRequest;
-import com.example.demo.dto.ReportResponse;
+import com.example.demo.entity.Report;
 import com.example.demo.service.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -32,12 +32,6 @@ public class ReportController {
             String jwtToken = jwtService.extractTokenFromRequest(request);
             String reporterEmail = jwtService.getEmailFromJWT(jwtToken);
 
-            // 신고 타입이 기타인 경우, 세부 내용 검증
-            if ("other".equalsIgnoreCase(reportRequest.getType()) &&
-                    (reportRequest.getText() == null || reportRequest.getText().isEmpty())) {
-                return ResponseEntity.badRequest().body("Text is required for 'other' type reports.");
-            }
-
             // 신고자의 위치 정보
             double latitude = reportRequest.getLatitude();
             double longitude = reportRequest.getLongitude();
@@ -45,23 +39,35 @@ public class ReportController {
             // 신고자의 위치 저장
             geoService.saveUserLocation(reporterEmail, longitude, latitude);
 
+            // 타임스탬프 검증
+            if (reportRequest.getTimestamp() == null) {
+                return ResponseEntity.badRequest().body("Timestamp is required.");
+            }
             // 신고 타입별 메시지 생성
             String alertMessage = generateAlertMessage(reportRequest);
 
-            // 신고 데이터 저장
-            reportService.saveReport(reporterEmail, reportRequest, alertMessage);
+            // 블록체인에 신고 메시지 전송, 해시값 얻음
 
+
+            // 신고 데이터 저장
+            Long reportId = reportService.saveReport(reporterEmail, reportRequest, alertMessage);
 
             // 반경 5km 내 사용자 검색
             List<String> nearbyUsers = geoService.findNearbyUsers(longitude, latitude, 5);
 
             // Push 알림이 활성화된 사용자 필터링
             List<String> pushEnabledUsers = memberService.filterPushEnabledUsers(nearbyUsers);
+            System.out.println("[DEBUG] Push 알림 가능 사용자: " + pushEnabledUsers);
 
 
+            // 이 얻은 해시값으로 블록체인에서 메시지 얻기, 이 메시지로 알림 전송
+
+
+            System.out.println("[DEBUG] sendNotifications 메서드 호출 시작");
             // 주변 사용자들에게 알림 전송 (신고자 제외)
-            notificationService.sendNotifications(reporterEmail, pushEnabledUsers, "Emergency alert from nearby!");
-
+            // 누가, 언제, 어떤 메시지를 보내는지?
+            notificationService.sendNotifications(reporterEmail, pushEnabledUsers, alertMessage, reportId, reportRequest.getTimestamp());
+            System.out.println("[DEBUG] sendNotifications 메서드 호출 완료");
 
             return ResponseEntity.ok("Alert sent to nearby users.");
 
@@ -93,15 +99,17 @@ public class ReportController {
         }
     }
 
-    @GetMapping
+    @GetMapping("/my")
     public ResponseEntity<?> getUserReports(HttpServletRequest request) {
         try {
             String jwtToken = jwtService.extractTokenFromRequest(request);
             String email = jwtService.getEmailFromJWT(jwtToken);
 
-            List<ReportResponse> reports = reportService.getUserReports(email);
+            // Report 엔티티 리스트 조회
+            List<Report> reportEntities = reportService.getUserReports(email);
 
-            return ResponseEntity.ok(reports);
+            return ResponseEntity.ok(reportEntities);
+
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

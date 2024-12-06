@@ -37,6 +37,7 @@ public class Member {
     public Member(String email, String nickname) {
         this.email = email;
         this.nickname = nickname;
+        this.pushEnabled = true;
     }
 
 }

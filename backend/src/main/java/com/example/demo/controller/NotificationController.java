@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.entity.Notification;
 import com.example.demo.service.JwtService;
 import com.example.demo.service.NotificationService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,7 +22,7 @@ public class NotificationController {
     private final NotificationService notificationService;
 
     // 사용자 알림 조회 API
-    @GetMapping
+    @GetMapping("/my")
     public ResponseEntity<?> getUserNotifications(HttpServletRequest request) {
         try {
             // JWT 토큰에서 이메일 추출
@@ -29,7 +30,7 @@ public class NotificationController {
             String email = jwtService.getEmailFromJWT(jwtToken);
 
             // 알림 조회
-            List<String> notifications = notificationService.getUserNotifications(email);
+            List<Notification> notifications = notificationService.getUserNotifications(email);
 
             return ResponseEntity.ok(notifications);
         } catch (Exception e) {
