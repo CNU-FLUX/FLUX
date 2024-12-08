@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -37,6 +38,9 @@ public class KakaoService {
 
     @Autowired
     private GeoService geoService;
+
+    private final RedisTemplate<String, String> redisTemplate; // Redis 템플릿 추가
+
 
     // 카카오 로그인 URL 생성
     public String getKakaoLoginUrl() {
@@ -100,6 +104,11 @@ public class KakaoService {
         String nickname = responseBody.path("kakao_account").path("profile").path("nickname").asText();
         String profileImage = responseBody.path("kakao_account").path("profile").path("profile_image_url").asText();
 
+        // Redis에서 accountId 조회
+        String accountIdKey = "acc_id:" + email;
+        String accountId = redisTemplate.opsForValue().get(accountIdKey);
+        System.out.println("[DEBUG] Redis에서 조회한 accountId: " + accountId);
+
         // 사용자 정보 저장 또는 업데이트
         Member member = memberRepository.findById(email)
                 .map(existingMember -> {
@@ -108,6 +117,7 @@ public class KakaoService {
                     existingMember.setKakaoId(kakaoId);
                     existingMember.setProfileImage(profileImage);
                     existingMember.setAccessToken(accessToken);
+                    existingMember.setAccountId(accountId);
                     existingMember.setUpdatedAt(OffsetDateTime.now());
                     return existingMember;
                 })
@@ -121,6 +131,7 @@ public class KakaoService {
                         .createdAt(OffsetDateTime.now())
                         .updatedAt(OffsetDateTime.now())
                         .pushEnabled(true) // 기본값 설정
+                        .accountId(accountId)
                         .build());
 
         // Redis에 저장 (새로 생성된 사용자 또는 업데이트된 사용자)

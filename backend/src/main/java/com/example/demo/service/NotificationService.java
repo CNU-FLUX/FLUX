@@ -3,8 +3,11 @@ package com.example.demo.service;
 import com.example.demo.entity.Notification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 
@@ -17,8 +20,16 @@ public class NotificationService {
 
     private final RedisTemplate<String, Object> redisTemplate;
 
+    private final BlockchainService blockchainService;
+
     // WebSocket으로 알림 전송 및 저장
-    public void sendNotifications(String reporterEmail, List<String> recipients, String message, Long reportId, Date timestamp) {
+    public void sendNotifications(String reporterEmail, List<String> recipients, String transactionHash, Long reportId, Date timestamp) {
+        // 블록체인 메시지 조회
+        System.out.println("[DEBUG] 블록체인 메시지 조회 시작");
+        String message = blockchainService.getMessageFromBlockchain(transactionHash);
+        System.out.println("[DEBUG] 블록체인에서 조회한 메시지: " + message);
+
+
         for (String recipientEmail : recipients) {
             // 신고자(reporterEmail)와 수신자(recipientEmail)가 동일하면 알림 제외
             if (recipientEmail.equals(reporterEmail)) {
