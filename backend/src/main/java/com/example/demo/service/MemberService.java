@@ -5,6 +5,7 @@ import com.example.demo.repository.MemberRepository;
 import com.example.demo.dto.MemberRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,6 +20,9 @@ public class MemberService {
     private final JwtService jwtService;
 
     private final GeoService geoService;
+
+    private final RedisTemplate<String, Object> redisTemplate;
+
 
     public Member signupMember(MemberRequest memberRequest) {
         if (memberRepository.findByEmail(memberRequest.getEmail()).isPresent()) {
@@ -99,6 +103,17 @@ public class MemberService {
                     return member != null && member.isPushEnabled();
                 })
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 이메일을 기반으로 블록체인 계정 ID 조회
+     *
+     * @param email 사용자 이메일
+     * @return 블록체인 계정 ID
+     */
+    public String getAccountIdByEmail(String email) {
+        String redisKey = "acc_id:" + email;
+        return (String) redisTemplate.opsForValue().get(redisKey);
     }
 
 }

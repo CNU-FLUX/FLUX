@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.MemberRequest;
 import com.example.demo.entity.Member;
+import com.example.demo.service.BlockchainService;
 import com.example.demo.service.JwtService;
 import com.example.demo.service.MemberService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @CrossOrigin
 @RestController
@@ -18,6 +21,7 @@ public class MemberController {
 
     private final MemberService memberService;
     private final JwtService jwtService;
+    private final BlockchainService blockchainService;
 
     /**
      * 회원가입
@@ -102,6 +106,36 @@ public class MemberController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to update push notification setting: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/get-blockToken")
+    public ResponseEntity<?> getMemberTokenBalance(HttpServletRequest request) {
+        try {
+            // JWT 토큰에서 이메일 추출
+            String jwtToken = jwtService.extractTokenFromRequest(request);
+            String email = jwtService.getEmailFromJWT(jwtToken);
+
+            // MemberService를 통해 이메일 기반으로 블록체인 계정 조회
+            String accountId = memberService.getAccountIdByEmail(email);
+
+            if (accountId == null) {
+                return ResponseEntity.badRequest().body("Account ID not found for the given email");
+            }
+
+            // BlockchainService를 통해 블록체인 계정의 잔액 조회
+            String balance = blockchainService.getTokenBalance(accountId);
+
+            return ResponseEntity.ok(
+                    Map.of(
+                            "email", email,
+                            "accountId", accountId,
+                            "balance", balance
+                    )
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Failed to retrieve token balance: " + e.getMessage());
         }
     }
 }

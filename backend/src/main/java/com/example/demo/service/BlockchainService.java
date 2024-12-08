@@ -88,4 +88,21 @@ public class BlockchainService {
             throw new RuntimeException("Failed to retrieve message from blockchain");
         }
     }
+
+    // 블록체인에서 토큰 잔액 조회
+    public String getTokenBalance(String address) {
+        String url = BLOCKCHAIN_BASE_URL + "/api/ethereum/get-token";
+
+        ResponseEntity<Map> response = restTemplate.getForEntity(
+                url + "?address={address}",
+                Map.class,
+                Map.of("address", address)
+        );
+
+        if (response.getStatusCode() == HttpStatus.OK) {
+            return response.getBody().get("balance").toString();
+        } else {
+            throw new RuntimeException("Failed to retrieve token balance for address: " + address);
+        }
+    }
 }
