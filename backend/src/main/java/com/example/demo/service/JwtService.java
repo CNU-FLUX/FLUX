@@ -3,6 +3,7 @@ package com.example.demo.service;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -12,11 +13,12 @@ import java.util.Date;
 
 @Service
 public class JwtService {
-    private final SecretKey key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    private final SecretKey key;
 
-    public JwtService() {
+    // 비밀 키를 @Value로 주입받아 SecretKey로 변환
+    public JwtService(@Value("${jwt.secret}") String secret) {
+        this.key = Keys.hmacShaKeyFor(secret.getBytes());
     }
-
     public String createJWT(String email) {
         return Jwts.builder()
                 .claim("email", email) // 사용자 식별자로 email 사용
