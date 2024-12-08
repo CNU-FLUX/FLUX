@@ -132,6 +132,20 @@ public class ReportController {
         }
     }
 
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllReports() {
+        try {
+            // 모든 Report 엔티티 리스트 조회
+            List<Report> allReports = reportService.getAllReports();
+
+            return ResponseEntity.ok(allReports);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to fetch all reports: " + e.getMessage());
+        }
+    }
+
 
 }
 
