@@ -5,6 +5,7 @@ import com.example.demo.entity.Member;
 import com.example.demo.service.BlockchainService;
 import com.example.demo.service.JwtService;
 import com.example.demo.service.MemberService;
+import com.example.demo.service.RedisService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,6 +23,7 @@ public class MemberController {
     private final MemberService memberService;
     private final JwtService jwtService;
     private final BlockchainService blockchainService;
+    private final RedisService redisService;
 
     /**
      * 회원가입
@@ -116,12 +118,14 @@ public class MemberController {
             String jwtToken = jwtService.extractTokenFromRequest(request);
             String email = jwtService.getEmailFromJWT(jwtToken);
 
-            // MemberService를 통해 이메일 기반으로 블록체인 계정 조회
-            String accountId = blockchainService.getAccountIdByEmail(email);
+            // RedisService를 통해 이메일 기반으로 블록체인 계정 조회
+            Object accountIdObj = redisService.getValue("acc_id:" + email);
 
-            if (accountId == null) {
-                return ResponseEntity.badRequest().body("Account ID not found for the given email");
+            if (accountIdObj == null || !(accountIdObj instanceof String)) {
+                return ResponseEntity.badRequest().body("Account ID not found or invalid for the given email");
             }
+
+            String accountId = (String) accountIdObj;
 
             // BlockchainService를 통해 블록체인 계정의 잔액 조회
             String balance = blockchainService.getTokenBalance(accountId);
