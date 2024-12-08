@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 
+@CrossOrigin
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/kakao")
