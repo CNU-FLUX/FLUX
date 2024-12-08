@@ -32,31 +32,42 @@ public class ReportController {
             // JWT 토큰에서 이메일 추출
             String jwtToken = jwtService.extractTokenFromRequest(request);
             String reporterEmail = jwtService.getEmailFromJWT(jwtToken);
+            System.out.println("[DEBUG] JWT에서 추출한 이메일: " + reporterEmail);
 
             // 신고자의 위치 정보
             double latitude = reportRequest.getLatitude();
             double longitude = reportRequest.getLongitude();
 
             // 신고자의 위치 저장
+            System.out.println("[DEBUG] 신고자의 위치 정보 저장 시작");
             geoService.saveUserLocation(reporterEmail, longitude, latitude);
 
             // 타임스탬프 검증
             if (reportRequest.getTimestamp() == null) {
+                System.out.println("[DEBUG] Timestamp 누락 확인");
                 return ResponseEntity.badRequest().body("Timestamp is required.");
             }
+
             // 신고 타입별 메시지 생성
+            System.out.println("[DEBUG] Alert 메시지 생성 시작");
             String alertMessage = generateAlertMessage(reportRequest);
+            System.out.println("[DEBUG] Alert 메시지 생성 완료: " + alertMessage);
 
             // 블록체인에 신고 메시지 전송, 해시값 얻음
 
 
             // 신고 데이터 저장
+            System.out.println("[DEBUG] 신고 데이터 저장 시작");
             Long reportId = reportService.saveReport(reporterEmail, reportRequest, alertMessage);
+            System.out.println("[DEBUG] 신고 데이터 저장 완료, Report ID: " + reportId);
 
             // 반경 5km 내 사용자 검색
+            System.out.println("[DEBUG] 반경 5km 내 사용자 검색 시작");
             List<String> nearbyUsers = geoService.findNearbyUsers(longitude, latitude, 5);
+            System.out.println("[DEBUG] 반경 5km 내 사용자 검색 완료: " + nearbyUsers);
 
             // Push 알림이 활성화된 사용자 필터링
+            System.out.println("[DEBUG] Push 알림 가능 사용자 필터링 시작");
             List<String> pushEnabledUsers = memberService.filterPushEnabledUsers(nearbyUsers);
             System.out.println("[DEBUG] Push 알림 가능 사용자: " + pushEnabledUsers);
 

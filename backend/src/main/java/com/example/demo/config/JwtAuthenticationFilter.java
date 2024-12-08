@@ -28,20 +28,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         try {
             // 요청 헤더 확인
-            String authorizationHeader = request.getHeader("Authorization");
-            System.out.println("Authorization Header: " + authorizationHeader);
-
+//            System.out.println("Request Path: " + request.getRequestURI());
+//            System.out.println("Request Method: " + request.getMethod());
+//            System.out.println("Authorization Header: " + request.getHeader("Authorization"));
 
             // JWT 토큰 추출
             String token = jwtService.extractTokenFromRequest(request);
             if (token == null) {
                 throw new JwtException("Authorization 헤더가 없거나 잘못되었습니다.");
             }
-            System.out.println("Extracted Token: " + token);
+//            System.out.println("Extracted Token: " + token);
 
             // JWT 검증 및 이메일 추출
             String email = jwtService.getEmailFromJWT(token); // JWT에서 userId 추출
-            System.out.println("Extracted Email from Token: " + email);
+//            System.out.println("Extracted Email from Token: " + email);
 
 
             // SecurityContext에 인증 정보 설정
