@@ -68,7 +68,7 @@ public class ReportController {
 
             // 반경 5km 내 사용자 검색
 //            System.out.println("[DEBUG] 반경 5km 내 사용자 검색 시작");
-            List<String> nearbyUsers = geoService.findNearbyUsers(longitude, latitude, 5);
+            List<String> nearbyUsers = geoService.findNearbyUsers(longitude, latitude, 3);
             System.out.println("[DEBUG] 반경 5km 내 사용자 검색 완료: " + nearbyUsers);
 
             // Push 알림이 활성화된 사용자 필터링

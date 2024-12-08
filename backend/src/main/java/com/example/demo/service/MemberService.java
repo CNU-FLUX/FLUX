@@ -113,7 +113,9 @@ public class MemberService {
      */
     public String getAccountIdByEmail(String email) {
         String redisKey = "acc_id:" + email;
-        return (String) redisTemplate.opsForValue().get(redisKey);
+        String accountId = (String) redisTemplate.opsForValue().get(redisKey);
+        System.out.println("[DEBUG] Redis에서 조회한 accountId: " + accountId);
+        return accountId;
     }
 
 }

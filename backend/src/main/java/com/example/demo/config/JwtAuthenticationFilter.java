@@ -28,9 +28,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         try {
             // 요청 헤더 확인
-//            System.out.println("Request Path: " + request.getRequestURI());
-//            System.out.println("Request Method: " + request.getMethod());
-//            System.out.println("Authorization Header: " + request.getHeader("Authorization"));
+            System.out.println("Request Path: " + request.getRequestURI());
+            System.out.println("Request Method: " + request.getMethod());
+            System.out.println("Authorization Header: " + request.getHeader("Authorization"));
 
             // JWT 토큰 추출
             String token = jwtService.extractTokenFromRequest(request);
