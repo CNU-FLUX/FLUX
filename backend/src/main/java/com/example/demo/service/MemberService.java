@@ -105,17 +105,4 @@ public class MemberService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 이메일을 기반으로 블록체인 계정 ID 조회
-     *
-     * @param email 사용자 이메일
-     * @return 블록체인 계정 ID
-     */
-    public String getAccountIdByEmail(String email) {
-        String redisKey = "acc_id:" + email;
-        String accountId = (String) redisTemplate.opsForValue().get(redisKey);
-        System.out.println("[DEBUG] Redis에서 조회한 accountId: " + accountId);
-        return accountId;
-    }
-
 }

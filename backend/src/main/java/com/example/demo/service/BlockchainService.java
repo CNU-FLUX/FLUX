@@ -28,7 +28,7 @@ public class BlockchainService {
      * @param email 사용자 이메일
      * @return accountId (블록체인 주소)
      */
-    private String getAccountIdByEmail(String email) {
+    public String getAccountIdByEmail(String email) {
         String accountIdKey = ACCOUNT_ID_PREFIX + email;
         String accountId = redisTemplate.opsForValue().get(accountIdKey);
         if (accountId == null) {

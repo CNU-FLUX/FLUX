@@ -117,7 +117,7 @@ public class MemberController {
             String email = jwtService.getEmailFromJWT(jwtToken);
 
             // MemberService를 통해 이메일 기반으로 블록체인 계정 조회
-            String accountId = memberService.getAccountIdByEmail(email);
+            String accountId = blockchainService.getAccountIdByEmail(email);
 
             if (accountId == null) {
                 return ResponseEntity.badRequest().body("Account ID not found for the given email");
