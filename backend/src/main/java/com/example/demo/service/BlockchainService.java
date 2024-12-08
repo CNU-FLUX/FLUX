@@ -12,12 +12,12 @@ import java.util.Map;
 public class BlockchainService {
 
     private final RestTemplate restTemplate;
-    private final RedisTemplate<String, String> redisTemplate; // Redis 연동
+    private final RedisTemplate<String, Object> redisTemplate;
     private static final String BLOCKCHAIN_BASE_URL = "http://44.192.38.26:8080"; // 블록체인 서버 주소
     private static final String ACCOUNT_ID_PREFIX = "acc_id:"; // Redis 키 Prefix
 
 
-    public BlockchainService(RedisTemplate<String, String> redisTemplate) {
+    public BlockchainService(RedisTemplate<String, Object> redisTemplate) {
         this.restTemplate = new RestTemplate();
         this.redisTemplate = redisTemplate;
     }
@@ -28,15 +28,17 @@ public class BlockchainService {
      * @param email 사용자 이메일
      * @return accountId (블록체인 주소)
      */
-    private String getAccountIdByEmail(String email) {
+    public String getAccountIdByEmail(String email) {
         String accountIdKey = ACCOUNT_ID_PREFIX + email;
-        String accountId = redisTemplate.opsForValue().get(accountIdKey);
-        if (accountId == null) {
-            throw new RuntimeException("Account ID not found for email: " + email);
-        }
-        return accountId;
-    }
 
+        // Redis에서 hash 타입의 "accountId" 필드 조회
+        Object accountId = redisTemplate.opsForHash().get(accountIdKey, "accountId");
+
+        if (accountId == null || !(accountId instanceof String)) {
+            throw new RuntimeException("Account ID not found or invalid for email: " + email);
+        }
+        return (String) accountId;
+    }
 
     /**
      * 블록체인에 메시지 전송 및 트랜잭션 해시 반환
