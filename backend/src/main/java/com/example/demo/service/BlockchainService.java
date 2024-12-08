@@ -37,6 +37,8 @@ public class BlockchainService {
         if (accountId == null || !(accountId instanceof String)) {
             throw new RuntimeException("Account ID not found or invalid for email: " + email);
         }
+        System.out.println("[DEBUG]"+email+"의 블록체인 account Id : " + accountId);
+
         return (String) accountId;
     }
 
