@@ -27,12 +27,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         try {
-            String token = jwtService.extractTokenFromRequest(request); // 요청에서 JWT 추출
+            // 요청 헤더 확인
+            String authorizationHeader = request.getHeader("Authorization");
+            System.out.println("Authorization Header: " + authorizationHeader);
+
+
+            // JWT 토큰 추출
+            String token = jwtService.extractTokenFromRequest(request);
             if (token == null) {
                 throw new JwtException("Authorization 헤더가 없거나 잘못되었습니다.");
             }
+            System.out.println("Extracted Token: " + token);
 
+            // JWT 검증 및 이메일 추출
             String email = jwtService.getEmailFromJWT(token); // JWT에서 userId 추출
+            System.out.println("Extracted Email from Token: " + email);
+
 
             // SecurityContext에 인증 정보 설정
             UsernamePasswordAuthenticationToken authentication =
@@ -49,7 +59,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
         // 로그인, 회원가입 경로는 필터 제외
-        return path.startsWith("/member/signup") || path.startsWith("/member/login") || path.startsWith("/ws");
+        return path.startsWith("/kakao/login-url") || path.startsWith("/kakao/callback") || path.startsWith("/member/signup") || path.startsWith("/member/login") || path.startsWith("/ws");
     }
 
 }

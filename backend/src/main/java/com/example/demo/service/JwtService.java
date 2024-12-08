@@ -35,35 +35,31 @@ public class JwtService {
         return authHeader.substring(7); // "Bearer " 이후의 토큰 반환
     }
 
-    // JWT에서 email 추출
+
+    // JWT에서 email 추출 및 검증
     public String getEmailFromJWT(String token) {
+        Jws<Claims> claims = parseToken(token); // 토큰 검증
+        return claims.getBody().get("email", String.class);
+    }
+
+    // JWT 서명 및 만료 시간 검증
+    public void validateJWT(String token) {
+        parseToken(token); // 만료, 서명, 형식 검증
+    }
+
+    // JWT 파싱 로직
+    private Jws<Claims> parseToken(String token) {
         try {
-            Jws<Claims> claims = Jwts.parserBuilder()
+            return Jwts.parserBuilder()
                     .setSigningKey(key)
                     .build()
                     .parseClaimsJws(token);
-
-            return claims.getBody().get("email", String.class); // email 필드 추출
         } catch (ExpiredJwtException e) {
-            throw new JwtException("토큰이 만료되었습니다.", e);
+            throw new JwtException("JWT 토큰이 만료되었습니다.", e);
+        } catch (SignatureException e) {
+            throw new JwtException("JWT 서명이 유효하지 않습니다.", e);
         } catch (Exception e) {
             throw new JwtException("JWT 형식이 잘못되었습니다.", e);
-        }
-    }
-
-    public void validateJWT(String token) {
-        try {
-            Jws<Claims> jws = Jwts.parserBuilder() // parser() 대신 parserBuilder() 사용
-                    .setSigningKey(key) // verifyWith 대신 setSigningKey 사용
-                    .build() // 빌더 완료
-                    .parseClaimsJws(token);
-
-            Date expiration = jws.getBody().getExpiration();
-            if (expiration.before(new Date())) {
-                throw new JwtException("해당 요청에 대한 권한이 없습니다.");
-            }
-        } catch (Exception e) {
-            throw new JwtException("해당 요청에 대한 권한이 없습니다.");
         }
     }
 }
