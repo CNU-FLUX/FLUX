@@ -34,12 +34,19 @@ public class BlockchainService {
         // Redis에서 hash 타입의 "accountId" 필드 조회
         Object accountId = redisTemplate.opsForHash().get(accountIdKey, "accountId");
 
-        if (accountId == null || !(accountId instanceof String)) {
-            throw new RuntimeException("Account ID not found or invalid for email: " + email);
+        // String 타입이 아닌 경우 예외 처리
+        if (accountId == null) {
+            throw new RuntimeException("Account ID not found for email: " + email);
         }
-        System.out.println("[DEBUG]"+email+"의 블록체인 account Id : " + accountId);
 
-        return (String) accountId;
+        if (accountId instanceof String) {
+            return (String) accountId; // 단순 문자열 반환
+        } else if (accountId instanceof Map) {
+            // JSON 객체인 경우 처리 (필요에 따라 로직 수정)
+            return (String) ((Map<?, ?>) accountId).get("value");
+        } else {
+            throw new RuntimeException("Unexpected data type for accountId in Redis: " + accountId.getClass());
+        }
     }
 
     /**

@@ -19,6 +19,7 @@ public class NotificationService {
     private static final String NOTIFICATIONS_KEY_PREFIX = "notifications:"; // Redis
 
     private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, Object> jsonRedisTemplate; // JSON 전용 템플릿 추가
 
     private final BlockchainService blockchainService;
 
@@ -64,11 +65,49 @@ public class NotificationService {
         }
     }
 
+
+    public void sendNotificationsJust(String reporterEmail, List<String> recipients, String message, Long reportId, Date timestamp) {
+
+        for (String recipientEmail : recipients) {
+            // 신고자(reporterEmail)와 수신자(recipientEmail)가 동일하면 알림 제외
+            if (recipientEmail.equals(reporterEmail)) {
+                System.out.println("[알림 제외] 신고자 이메일: " + recipientEmail);
+                continue;
+            }
+
+            // 알림 WebSocket 경로 생성
+            String sanitizedEmail = recipientEmail.replace("@", "_at_").replace(".", "_dot_");
+            String destination = "/topic/" + sanitizedEmail;
+
+            // 경로와 메시지를 로그로 출력
+            System.out.println("[알림 전송] 경로: " + destination + ", 메시지: " + message);
+
+            // 알림 엔티티 생성
+            Notification notification = Notification.builder()
+                    .reportId(reportId)
+                    .message(message)
+                    .timestamp(timestamp)
+                    .senderEmail(reporterEmail) // 신고자 이메일 추가
+                    .build();
+
+            // WebSocket 메시지 전송
+            try {
+                messagingTemplate.convertAndSend(destination, notification);
+                System.out.println("[DEBUG] WebSocket 메시지 전송 성공: " + notification);
+            } catch (Exception e) {
+                System.err.println("[ERROR] WebSocket 메시지 전송 실패: " + e.getMessage());
+            }
+            // Redis에 알림 저장
+            saveNotification(recipientEmail, notification);
+        }
+    }
+
+
     // Redis에 알림 저장
     private void saveNotification(String recipient, Notification notification) {
         try {
             String notificationKey = NOTIFICATIONS_KEY_PREFIX + recipient;
-            redisTemplate.opsForList().leftPush(notificationKey, notification);
+            jsonRedisTemplate.opsForList().leftPush(notificationKey, notification);
             System.out.println("[DEBUG] 알림 저장 성공: " + notification);
         } catch (Exception e) {
             System.err.println("[ERROR] 알림 저장 실패: " + e.getMessage());
@@ -84,7 +123,18 @@ public class NotificationService {
         List<Notification> notifications = new ArrayList<>();
         if (notificationsFromRedis != null) {
             for (Object notification : notificationsFromRedis) {
-                notifications.add((Notification) notification);
+                if (notification instanceof Notification) {
+                    notifications.add((Notification) notification); // 객체로 변환 성공
+                } else {
+                    // JSON 문자열로 저장된 경우 역직렬화
+                    try {
+                        notifications.add((Notification) jsonRedisTemplate.getValueSerializer().deserialize(
+                                ((String) notification).getBytes()
+                        ));
+                    } catch (Exception e) {
+                        System.err.println("[ERROR] 알림 역직렬화 실패: " + e.getMessage());
+                    }
+                }
             }
         }
         return notifications;

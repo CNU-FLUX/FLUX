@@ -56,9 +56,9 @@ public class ReportController {
 //            System.out.println("[DEBUG] Alert 메시지 생성 완료: " + alertMessage);
 
             // 블록체인에 신고 메시지 전송, 해시값 얻음
-            System.out.println("[DEBUG] 블록체인으로 메시지 전송 시작");
-            String transactionHash = blockchainService.sendMessageToBlockchain(reporterEmail, alertMessage);
-            System.out.println("[DEBUG] 블록체인 전송 완료, 트랜잭션 해시: " + transactionHash);
+//            System.out.println("[DEBUG] 블록체인으로 메시지 전송 시작");
+//            String transactionHash = blockchainService.sendMessageToBlockchain(reporterEmail, alertMessage);
+//            System.out.println("[DEBUG] 블록체인 전송 완료, 트랜잭션 해시: " + transactionHash);
 
 
             // 신고 데이터 저장
@@ -80,7 +80,9 @@ public class ReportController {
             // 주변 사용자들에게 알림 전송 (신고자 제외)
             // 누가, 언제, 어떤 메시지를 보내는지?
             // 트랜잭션 해시를 전달해서 저 안에서 해시로 메시치 얻어서 알림 함
-            notificationService.sendNotifications(reporterEmail, pushEnabledUsers, transactionHash, reportId, reportRequest.getTimestamp());
+//            notificationService.sendNotifications(reporterEmail, pushEnabledUsers, transactionHash, reportId, reportRequest.getTimestamp());
+            notificationService.sendNotificationsJust(reporterEmail, pushEnabledUsers, alertMessage, reportId, reportRequest.getTimestamp());
+
             System.out.println("[DEBUG] sendNotifications 메서드 호출 완료");
 
             return ResponseEntity.ok("Alert sent to nearby users.");
