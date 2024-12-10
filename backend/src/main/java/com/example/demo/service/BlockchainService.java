@@ -13,7 +13,7 @@ public class BlockchainService {
 
     private final RestTemplate restTemplate;
     private final RedisTemplate<String, Object> redisTemplate;
-    private static final String BLOCKCHAIN_BASE_URL = "http://44.192.38.26:8080"; // 블록체인 서버 주소
+    private static final String BLOCKCHAIN_BASE_URL = "http://3.227.108.238:8080"; // 블록체인 서버 주소
     private static final String ACCOUNT_ID_PREFIX = "acc_id:"; // Redis 키 Prefix
 
 

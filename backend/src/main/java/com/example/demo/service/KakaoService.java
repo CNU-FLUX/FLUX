@@ -105,9 +105,9 @@ public class KakaoService {
         String profileImage = responseBody.path("kakao_account").path("profile").path("profile_image_url").asText();
 
         // Redis에서 accountId 조회
-        String accountIdKey = "acc_id:" + email;
-        String accountId = redisTemplate.opsForValue().get(accountIdKey);
-        System.out.println("[DEBUG] Redis에서 조회한 accountId: " + accountId);
+//        String accountIdKey = "acc_id:" + email;
+//        String accountId = redisTemplate.opsForValue().get(accountIdKey);
+//        System.out.println("[DEBUG] Redis에서 조회한 accountId: " + accountId);
 
         // 사용자 정보 저장 또는 업데이트
         Member member = memberRepository.findById(email)
@@ -117,7 +117,7 @@ public class KakaoService {
                     existingMember.setKakaoId(kakaoId);
                     existingMember.setProfileImage(profileImage);
                     existingMember.setAccessToken(accessToken);
-                    existingMember.setAccountId(accountId);
+//                    existingMember.setAccountId(accountId);
                     existingMember.setUpdatedAt(OffsetDateTime.now());
                     return existingMember;
                 })
@@ -131,7 +131,7 @@ public class KakaoService {
                         .createdAt(OffsetDateTime.now())
                         .updatedAt(OffsetDateTime.now())
                         .pushEnabled(true) // 기본값 설정
-                        .accountId(accountId)
+//                        .accountId(accountId)
                         .build());
 
         // Redis에 저장 (새로 생성된 사용자 또는 업데이트된 사용자)
