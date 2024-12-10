@@ -34,6 +34,7 @@ public class ReportService {
                 .timestamp(reportRequest.getTimestamp())
                 .message(alertMessage)
                 .text(reportRequest.getText())
+                .trust(false)
                 .build();
 
         // Redis에 신고 데이터 추가 (List 구조 사용)
@@ -102,4 +103,36 @@ public class ReportService {
         }
         return allReports;
     }
+
+    // 해당 신고의 신뢰를 true로 변경
+    public void markReportAsTrusted(String email, Long reportId) {
+        String reportListKey = "user_reports:" + email;
+
+        // 리스트의 모든 데이터를 가져옵니다.
+        List<Object> reports = jsonRedisTemplate.opsForList().range(reportListKey, 0, -1);
+        if (reports == null || reports.isEmpty()) {
+            System.out.println("[ERROR] 신고 리스트가 비어있습니다.");
+            return;
+        }
+
+        // 해당 reportId를 가진 데이터를 찾고 업데이트합니다.
+        for (int i = 0; i < reports.size(); i++) {
+            Object reportObject = reports.get(i);
+
+            // JSON 데이터를 Report 객체로 변환 (직렬화/역직렬화 필요)
+            Report report = (Report) reportObject; // 적절히 캐스팅 또는 변환
+            if (report.getId().equals(reportId)) {
+                // trust 값을 업데이트
+                report.setTrust(true);
+
+                // 업데이트된 객체를 리스트에 다시 저장
+                jsonRedisTemplate.opsForList().set(reportListKey, i, report);
+                System.out.println("[INFO] Report ID " + reportId + "가 신뢰됨으로 업데이트되었습니다.");
+                return;
+            }
+        }
+
+        System.out.println("[ERROR] Report ID " + reportId + "를 찾을 수 없습니다.");
+    }
+
 }

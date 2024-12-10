@@ -72,6 +72,10 @@ public class ReportController {
             List<String> nearbyUsers = geoService.findNearbyUsers(longitude, latitude, 3);
             System.out.println("[DEBUG] 반경 3km 내 사용자 검색 완료: " + nearbyUsers);
 
+            // 신고자 제외
+            nearbyUsers.remove(reporterEmail);
+            System.out.println("[DEBUG] 신고자 제외 후 사용자 목록: " + nearbyUsers);
+
             // Push 알림이 활성화된 사용자 필터링
 //            System.out.println("[DEBUG] Push 알림 가능 사용자 필터링 시작");
             List<String> pushEnabledUsers = memberService.filterPushEnabledUsers(nearbyUsers);

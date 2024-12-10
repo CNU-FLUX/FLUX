@@ -17,4 +17,5 @@ public class Report {
     private Date timestamp; // 신고 시간
     private String message;      // 신고 메시지
     private String text;         // 기타 유형의 신고 세부 내용 (optional)
+    private boolean trust;       // 신뢰 여부
 }
