@@ -78,12 +78,12 @@ public class ReportService {
 
         // Redis의 모든 키 조회 (user_reports:* 형식)
         Set<String> keys = redisTemplate.keys(REPORTS_KEY_PREFIX + "*");
-        System.out.println("[DEBUG] 신고 keys 전부 들고옴 : " + keys);
+//        System.out.println("[DEBUG] 신고 keys 전부 들고옴 : " + keys);
 
         if (keys != null) {
             for (String key : keys) {
                 List<Object> reports = redisTemplate.opsForList().range(key, 0, -1);
-                System.out.println("[DEBUG] " + key + "의 신고들 : " + reports);
+//                System.out.println("[DEBUG] " + key + "의 신고들 : " + reports);
                 if (reports != null) {
                     for (Object report : reports) {
                         if (report instanceof String) {
