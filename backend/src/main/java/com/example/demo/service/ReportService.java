@@ -4,6 +4,7 @@ import com.example.demo.dto.ReportRequest;
 import com.example.demo.entity.Report;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -77,16 +78,18 @@ public class ReportService {
 
         // Redis의 모든 키 조회 (user_reports:* 형식)
         Set<String> keys = redisTemplate.keys(REPORTS_KEY_PREFIX + "*");
+        System.out.println("[DEBUG] 신고 keys 전부 들고옴 : " + keys);
 
         if (keys != null) {
             for (String key : keys) {
-                List<Object> reports = jsonRedisTemplate.opsForList().range(key, 0, -1);
+                List<Object> reports = redisTemplate.opsForList().range(key, 0, -1);
+                System.out.println("[DEBUG] " + key + "의 신고들 : " + reports);
                 if (reports != null) {
                     for (Object report : reports) {
                         if (report instanceof String) {
                             try {
-                                // JSON 문자열을 Report 객체로 변환
-                                Report reportObject = new ObjectMapper().readValue((String) report, Report.class);
+                                // JSON 문자열을 Report 객체로 변환 (jsonRedisTemplate 사용)
+                                Report reportObject = (Report) jsonRedisTemplate.getValueSerializer().deserialize(((String) report).getBytes());
                                 allReports.add(reportObject);
                             } catch (Exception e) {
                                 System.err.println("[ERROR] JSON 변환 실패: " + e.getMessage());
@@ -102,6 +105,7 @@ public class ReportService {
             }
         }
         return allReports;
+
     }
 
     // 해당 신고의 신뢰를 true로 변경

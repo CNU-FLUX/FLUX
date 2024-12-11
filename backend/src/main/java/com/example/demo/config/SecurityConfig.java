@@ -28,7 +28,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) // CSRF 비활성화
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/kakao/login-url", "/kakao/callback").permitAll() // 회원가입, 로그인 허용
-                        .requestMatchers("/member/login", "/member/signup").permitAll()
+                        .requestMatchers("/report/all", "/member/login", "/member/signup").permitAll()
                         .requestMatchers("/ws/**").permitAll() // WebSocket 엔드포인트 허용
                         .anyRequest().authenticated() // 나머지 요청도 인증 필요
                 )

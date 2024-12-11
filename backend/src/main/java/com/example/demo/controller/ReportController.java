@@ -149,6 +149,7 @@ public class ReportController {
 
             return ResponseEntity.ok(allReports);
         } catch (Exception e) {
+            System.err.println("Error occurred while fetching all reports: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to fetch all reports: " + e.getMessage());
